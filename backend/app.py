@@ -1,72 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Indoor-Routes Application</title>
-</head>
-<body>
-    <h1>Welcome to Indoor-Routes application!</h1>
-    <button onclick="startTracking()">Start Tracking</button>
-    <button onclick="stopTracking()">Stop Tracking</button>
-    <p id="location"></p>
+from flask import Flask, request, jsonify
 
-    <script>
-        let watchID;
+app = Flask(__name__)
 
-        function startTracking() {
-            if (navigator.geolocation) {
-                watchID = navigator.geolocation.watchPosition(showPosition, showError, {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                });
-            } else {
-                document.getElementById("location").innerHTML = "Geolocation is not supported by this browser.";
-            }
-        }
+@app.route('/')
+def home():
+    return "Welcome to Indoor Routes application!"
 
-        function stopTracking() {
-            if (watchID) {
-                navigator.geolocation.clearWatch(watchID);
-            }
-        }
+@app.route('/location', methods=['POST'])
+def get_location():
+    data = request.json
+    user_location = data.get('location')
+    # Aqui você pode adicionar a lógica para lidar com a localização recebida
+    print(f"Received location: {user_location}")
+    return jsonify({"message": "Location received"}), 200
 
-        function showPosition(position) {
-            let location = "Latitude: " + position.coords.latitude +
-                " Longitude: " + position.coords.longitude;
-            document.getElementById("location").innerHTML = location;
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
 
-            fetch('/location', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ location: location }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
-
-        function showError(error) {
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    document.getElementById("location").innerHTML = "User denied the request for Geolocation.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    document.getElementById("location").innerHTML = "Location information is unavailable.";
-                    break;
-                case error.TIMEOUT:
-                    document.getElementById("location").innerHTML = "The request to get user location timed out.";
-                    break;
-                case error.UNKNOWN_ERROR:
-                    document.getElementById("location").innerHTML = "An unknown error occurred.";
-                    break;
-            }
-        }
-    </script>
-</body>
-</html>

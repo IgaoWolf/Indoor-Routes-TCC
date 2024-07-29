@@ -1,72 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Waze-like Application</title>
-</head>
-<body>
-    <h1>Welcome to the Waze-like application!</h1>
-    <button onclick="startTracking()">Start Tracking</button>
-    <button onclick="stopTracking()">Stop Tracking</button>
-    <p id="location"></p>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geolocation Example</title>
     <script>
-        let watchID;
+        document.addEventListener('DOMContentLoaded', () => {
+            const output = document.getElementById('output');
 
-        function startTracking() {
+            // Função para mostrar a posição do usuário
+            function showPosition(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                const alt = position.coords.altitude !== null ? position.coords.altitude : 'Altitude not available';
+
+                output.innerHTML = `
+                    <p><strong>Latitude:</strong> ${lat}</p>
+                    <p><strong>Longitude:</strong> ${lon}</p>
+                    <p><strong>Altitude:</strong> ${alt}</p>
+                `;
+            }
+
+            // Função para lidar com erros de geolocalização
+            function showError(error) {
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        output.innerHTML = 'User denied the request for Geolocation.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        output.innerHTML = 'Location information is unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        output.innerHTML = 'The request to get user location timed out.';
+                        break;
+                    case error.UNKNOWN_ERROR:
+                        output.innerHTML = 'An unknown error occurred.';
+                        break;
+                }
+            }
+
+            // Verificar se o navegador suporta geolocalização
             if (navigator.geolocation) {
-                watchID = navigator.geolocation.watchPosition(showPosition, showError, {
+                // Obter a posição inicial e iniciar a vigilância
+                const watchId = navigator.geolocation.watchPosition(showPosition, showError, {
                     enableHighAccuracy: true,
                     timeout: 5000,
                     maximumAge: 0
                 });
+
+                // Opcional: Parar a vigilância em algum momento (exemplo)
+                // navigator.geolocation.clearWatch(watchId);
             } else {
-                document.getElementById("location").innerHTML = "Geolocation is not supported by this browser.";
+                output.innerHTML = 'Geolocation is not supported by this browser.';
             }
-        }
-
-        function stopTracking() {
-            if (watchID) {
-                navigator.geolocation.clearWatch(watchID);
-            }
-        }
-
-        function showPosition(position) {
-            let location = "Latitude: " + position.coords.latitude +
-                " Longitude: " + position.coords.longitude;
-            document.getElementById("location").innerHTML = location;
-
-            fetch('/location', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ location: location }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
-
-        function showError(error) {
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    document.getElementById("location").innerHTML = "User denied the request for Geolocation.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    document.getElementById("location").innerHTML = "Location information is unavailable.";
-                    break;
-                case error.TIMEOUT:
-                    document.getElementById("location").innerHTML = "The request to get user location timed out.";
-                    break;
-                case error.UNKNOWN_ERROR:
-                    document.getElementById("location").innerHTML = "An unknown error occurred.";
-                    break;
-            }
-        }
+        });
     </script>
+</head>
+<body>
+    <h1>Geolocation Information</h1>
+    <div id="output">Loading...</div>
 </body>
 </html>
+
